@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ article.title }} - 环保交流{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1 class="card-title mb-4">{{ article.title }}</h1>
+                <div class="article-meta text-muted small mb-4">
+                    <span><i class="bi bi-person"></i> {{ article.author.username }}</span>
+                    <span class="ms-3"><i class="bi bi-clock"></i> {{ article.created_at|date:"Y-m-d H:i" }}</span>
+                    <span class="ms-3"><i class="bi bi-hand-thumbs-up"></i> {{ article.likes.count }} 点赞</span>
+                    {% if user.is_authenticated %}
+                    <button class="btn btn-sm btn-outline-success ms-3 like-btn" 
+                            data-article-id="{{ article.id }}"
+                            {% if user in article.likes.all %}data-liked="true"{% endif %}>
+                        <i class="bi bi-hand-thumbs-up{% if user in article.likes.all %}-fill{% endif %}"></i>
+                        <span>{% if user in article.likes.all %}已点赞{% else %}点赞{% endif %}</span>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="article-content mb-4">
+                    {{ article.content|linebreaks }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">评论 ({{ comments.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'post_comment' article.id %}" class="mb-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <textarea class="form-control" name="content" rows="3" placeholder="写下你的评论..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">发表评论</button>
+                </form>
+                {% else %}
+                <div class="alert alert-info">
+                    请<a href="{% url 'login' %}" class="alert-link">登录</a>后发表评论
+                </div>
+                {% endif %}
+
+                <div class="comments-list">
+                    {% for comment in comments %}
+                    <div class="comment-item mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="comment-author">
+                                <i class="bi bi-person-circle"></i>
+                                <span class="fw-bold">{{ comment.author.username }}</span>
+                            </div>
+                            <div class="comment-time text-muted small">
+                                {{ comment.created_at|date:"Y-m-d H:i" }}
+                            </div>
+                        </div>
+                        <div class="comment-content">
+                            {{ comment.content|linebreaks }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">暂无评论</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">作者信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-person-circle fs-1 me-3"></i>
+                    <div>
+                        <h6 class="mb-1">{{ article.author.username }}</h6>
+                        <p class="text-muted small mb-0">注册于 {{ article.author.date_joined|date:"Y-m-d" }}</p>
+                    </div>
+                </div>
+                <div class="author-stats">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fw-bold">{{ article.author.article_set.count }}</div>
+                            <div class="text-muted small">文章</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold">{{ article.author.comment_set.count }}</div>
+                            <div class="text-muted small">评论</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold">{{ article.author.liked_articles.count }}</div>
+                            <div class="text-muted small">获赞</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">相关文章</h5>
+            </div>
+            <div class="card-body">
+                {% for related_article in article.author.article_set.all|slice:":5" %}
+                    {% if related_article.id != article.id %}
+                    <div class="related-article mb-3">
+                        <a href="{% url 'article_detail' related_article.id %}" class="text-decoration-none">
+                            <h6 class="mb-1">{{ related_article.title }}</h6>
+                            <p class="text-muted small mb-0">{{ related_article.created_at|date:"Y-m-d" }}</p>
+                        </a>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                <p class="text-muted">暂无相关文章</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const likeBtn = document.querySelector('.like-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const articleId = this.dataset.articleId;
+            const isLiked = this.dataset.liked === 'true';
+            
+            fetch(`/article/${articleId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = this.querySelector('i');
+                const text = this.querySelector('span');
+                
+                if (data.liked) {
+                    icon.classList.remove('bi-hand-thumbs-up');
+                    icon.classList.add('bi-hand-thumbs-up-fill');
+                    text.textContent = '已点赞';
+                    this.dataset.liked = 'true';
+                } else {
+                    icon.classList.remove('bi-hand-thumbs-up-fill');
+                    icon.classList.add('bi-hand-thumbs-up');
+                    text.textContent = '点赞';
+                    this.dataset.liked = 'false';
+                }
+                
+                // 更新点赞数
+                const likesCount = document.querySelector('.article-meta .bi-hand-thumbs-up').nextElementSibling;
+                likesCount.textContent = ` ${data.likes_count} 点赞`;
+            });
+        });
+    }
+});
+</script>
+{% endblock %} 

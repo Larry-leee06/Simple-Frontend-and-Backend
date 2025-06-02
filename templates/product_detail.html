@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - 环保商城{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-image-container {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-height: 500px;
+        overflow: hidden;
+    }
+    
+    .product-image {
+        max-width: 100%;
+        max-height: 450px;
+        object-fit: contain;
+    }
+    
+    .related-image-container {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        overflow: hidden;
+    }
+    
+    .related-product-image {
+        max-width: 100%;
+        max-height: 180px;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}">商品列表</a></li>
+            <li class="breadcrumb-item"><a href="?category={{ product.category.id }}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- 商品图片 -->
+        <div class="col-md-6">
+            <div class="card product-image-container">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
+                {% else %}
+                <img src="{% static 'images/default-product.jpg' %}" class="product-image" alt="默认商品图片">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 商品信息 -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ product.name }}</h1>
+            <p class="text-muted">{{ product.description }}</p>
+            
+            <!-- 发布者信息 -->
+            {% if product.publisher %}
+            <div class="mb-3 d-flex align-items-center">
+                <span class="text-muted me-2">发布者:</span>
+                <div class="d-flex align-items-center">
+                    {% if product.publisher.profile.avatar %}
+                    <img src="{{ product.publisher.profile.avatar.url }}" class="rounded-circle me-2" width="24" height="24" alt="{{ product.publisher.username }}">
+                    {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ product.publisher.username }}&background=198754&color=fff&size=24" class="rounded-circle me-2" width="24" height="24" alt="{{ product.publisher.username }}">
+                    {% endif %}
+                    <span>{{ product.publisher.username }}</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <h3 class="text-danger">¥{{ product.price }}</h3>
+            </div>
+
+            <div class="mb-3">
+                <span class="me-3">销量: {{ product.sales_count }}</span>
+                <span>库存: {{ product.stock }}</span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">数量</label>
+                <div class="input-group" style="width: 150px;">
+                    <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">-</button>
+                    <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="{{ product.stock }}">
+                    <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">+</button>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" onclick="addToCart({{ product.id }})">加入购物车</button>
+                <button class="btn btn-danger">立即购买</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 相关商品 -->
+    {% if related_products %}
+    <div class="mt-5">
+        <h3 class="mb-4">相关商品</h3>
+        <div class="row row-cols-1 row-cols-md-4 g-4">
+            {% for related in related_products %}
+            <div class="col">
+                <div class="card h-100">
+                    <div class="related-image-container">
+                        {% if related.image %}
+                        <img src="{{ related.image.url }}" class="related-product-image" alt="{{ related.name }}">
+                        {% else %}
+                        <img src="{% static 'images/default-product.jpg' %}" class="related-product-image" alt="默认商品图片">
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ related.name }}</h5>
+                        <p class="card-text">
+                            <span class="text-danger">¥{{ related.price }}</span>
+                        </p>
+                        <a href="{% url 'product_detail' related.id %}" class="btn btn-outline-primary btn-sm">查看详情</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+function decreaseQuantity() {
+    var input = document.getElementById('quantity');
+    var value = parseInt(input.value);
+    if (value > 1) {
+        input.value = value - 1;
+    }
+}
+
+function increaseQuantity() {
+    var input = document.getElementById('quantity');
+    var value = parseInt(input.value);
+    var max = parseInt(input.max);
+    if (value < max) {
+        input.value = value + 1;
+    }
+}
+
+function addToCart(productId) {
+    var quantity = parseInt(document.getElementById('quantity').value) || 1;
+    
+    if (quantity < 1) {
+        alert('数量必须大于0');
+        return;
+    }
+    
+    fetch('/api/cart/add_to_cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('成功加入购物车！');
+            // 更新购物车数量
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) {
+                cartCount.textContent = data.cart_count;
+            }
+        } else {
+            alert(data.error || '添加失败，请重试');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('添加失败，请重试');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+{% endblock %} 

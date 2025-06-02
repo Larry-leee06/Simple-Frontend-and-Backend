@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}发表文章 - 环保交流{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+<style>
+    .note-editor {
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">发表文章</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="title" class="form-label">文章标题</label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                               placeholder="请输入文章标题（2-100字）" minlength="2" maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">文章内容</label>
+                        <textarea id="content" name="content" class="form-control" rows="15" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label d-block">文章类型</label>
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="article_type" id="type1" value="experience" checked>
+                            <label class="btn btn-outline-success" for="type1">环保经验</label>
+                            
+                            <input type="radio" class="btn-check" name="article_type" id="type2" value="news">
+                            <label class="btn btn-outline-success" for="type2">环保新闻</label>
+                            
+                            <input type="radio" class="btn-check" name="article_type" id="type3" value="discussion">
+                            <label class="btn btn-outline-success" for="type3">话题讨论</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">标签</label>
+                        <input type="text" class="form-control" id="tags" name="tags" 
+                               placeholder="输入标签，用逗号分隔（如：环保,垃圾分类,节能）">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cover_image" class="form-label">封面图片（可选）</label>
+                        <input type="file" class="form-control" id="cover_image" name="cover_image" 
+                               accept="image/*">
+                        <div class="form-text">支持jpg、png格式，建议尺寸1200x600像素</div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="allow_comment" name="allow_comment" checked>
+                        <label class="form-check-label" for="allow_comment">
+                            允许评论
+                        </label>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-light me-2" onclick="saveDraft()">保存草稿</button>
+                        <button type="submit" class="btn btn-success">发布文章</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-zh-CN.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#content').summernote({
+        lang: 'zh-CN',
+        height: 300,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ],
+        callbacks: {
+            onImageUpload: function(files) {
+                // 处理图片上传
+                for(let i=0; i < files.length; i++) {
+                    uploadImage(files[i]);
+                }
+            }
+        }
+    });
+});
+
+function uploadImage(file) {
+    let form = new FormData();
+    form.append('image', file);
+    
+    fetch('/upload_image/', {
+        method: 'POST',
+        body: form,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.url) {
+            $('#content').summernote('insertImage', data.url);
+        }
+    });
+}
+
+function saveDraft() {
+    // 保存草稿功能
+    let form = document.querySelector('form');
+    let formData = new FormData(form);
+    formData.append('is_draft', 'true');
+    
+    fetch('/save_draft/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            alert('草稿保存成功！');
+        } else {
+            alert('保存失败，请重试！');
+        }
+    });
+}
+</script>
+{% endblock %} 

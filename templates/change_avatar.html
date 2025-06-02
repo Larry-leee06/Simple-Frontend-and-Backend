@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}更改头像 - 环保社区{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-upload-container {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+    
+    .avatar-card {
+        max-width: 450px;
+        width: 100%;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin: 0 auto;
+    }
+    
+    .avatar-header {
+        background-color: #198754;
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .current-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        margin: 0 auto;
+        display: block;
+    }
+    
+    .current-avatar:hover {
+        transform: scale(1.05);
+    }
+    
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: none;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        margin: 0 auto;
+    }
+    
+    .upload-btn-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+    
+    .upload-btn-wrapper input[type=file] {
+        font-size: 100px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+    }
+    
+    /* 自定义文件上传按钮样式 */
+    .custom-file-upload {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: #e8f5e9;
+        border: 1px solid #198754;
+        border-radius: 5px;
+        color: #198754;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        font-weight: 500;
+    }
+    
+    .custom-file-upload:hover {
+        background-color: #198754;
+        color: white;
+    }
+    
+    .form-text {
+        text-align: center;
+        margin-top: 0.75rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="avatar-upload-container">
+    <div class="container">
+        <div class="card avatar-card">
+            <div class="avatar-header">
+                <h3 class="mb-0">更改头像</h3>
+            </div>
+            <div class="card-body p-4">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <form method="post" enctype="multipart/form-data" id="avatarForm">
+                    {% csrf_token %}
+                    
+                    <div class="text-center mb-4">
+                        <h5 class="mb-3">当前头像</h5>
+                        {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="current-avatar" id="currentAvatar">
+                        {% else %}
+                        <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=198754&color=fff&size=150" alt="{{ user.username }}" class="current-avatar" id="currentAvatar">
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <img src="" alt="预览" class="avatar-preview" id="avatarPreview">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-center d-block">选择新头像</label>
+                        <div class="upload-btn-wrapper d-block">
+                            <label for="avatar" class="custom-file-upload">
+                                <i class="bi bi-cloud-upload me-2"></i>选择图片
+                            </label>
+                            <input type="file" name="avatar" id="avatar" accept="image/*">
+                        </div>
+                        <div id="selected-file-name" class="form-text mt-2 text-success" style="display: none;">
+                            <i class="bi bi-check-circle-fill me-1"></i><span></span>
+                        </div>
+                        <div class="form-text">
+                            支持 JPG, PNG, GIF 格式，最大 2MB
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <a href="{% url 'index' %}" class="btn btn-light">返回首页</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i> 保存头像
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('avatar').addEventListener('change', function(e) {
+        const file = this.files[0];
+        if (file) {
+            // 显示文件名
+            const fileNameElement = document.getElementById('selected-file-name');
+            fileNameElement.style.display = 'block';
+            fileNameElement.querySelector('span').textContent = file.name;
+            
+            // 预览图片
+            const reader = new FileReader();
+            const preview = document.getElementById('avatarPreview');
+            const currentAvatar = document.getElementById('currentAvatar');
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'inline-block';
+                currentAvatar.style.display = 'none';
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %} 

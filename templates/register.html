@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}注册 - 环保社区{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .register-card {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+    
+    .register-header {
+        background-color: #198754;
+        color: white;
+        text-align: center;
+        padding: 1.5rem;
+        position: relative;
+    }
+    
+    .register-header::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 30px;
+        background-color: #198754;
+        transform: rotate(45deg);
+    }
+    
+    .register-body {
+        padding: 2rem;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: transparent;
+        border-right: none;
+    }
+    
+    .register-input {
+        border-left: none;
+    }
+    
+    .btn-register {
+        padding: 0.75rem;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-register:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(25, 135, 84, 0.4);
+    }
+    
+    .register-footer {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        text-align: center;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .form-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        margin-left: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container register-container">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-6">
+            <div class="card register-card">
+                <div class="register-header">
+                    <h4 class="mb-0">加入环保社区</h4>
+                </div>
+                <div class="card-body register-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        注册信息有误，请检查以下问题：
+                        <ul class="mb-0 mt-1">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person-fill text-success"></i>
+                                </span>
+                                <input type="text" class="form-control register-input" id="username" name="username" 
+                                       placeholder="请输入用户名" required autofocus>
+                            </div>
+                            <div class="form-text">用户名只能包含字母、数字和下划线</div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope-fill text-success"></i>
+                                </span>
+                                <input type="email" class="form-control register-input" id="email" name="email" 
+                                       placeholder="请输入邮箱" required>
+                            </div>
+                            <div class="form-text">用于接收重要通知和找回密码</div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock-fill text-success"></i>
+                                </span>
+                                <input type="password" class="form-control register-input" id="password1" name="password1" 
+                                       placeholder="请输入密码" required>
+                            </div>
+                            <div class="form-text">密码至少包含8个字符</div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-shield-lock-fill text-success"></i>
+                                </span>
+                                <input type="password" class="form-control register-input" id="password2" name="password2" 
+                                       placeholder="请确认密码" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="agree" name="agree" required>
+                                <label class="form-check-label" for="agree">
+                                    我已阅读并同意<a href="#" class="text-success">用户协议</a>和<a href="#" class="text-success">隐私政策</a>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 btn-register">
+                            <i class="bi bi-person-plus-fill me-2"></i>创建账号
+                        </button>
+                    </form>
+                </div>
+                <div class="register-footer">
+                    <p class="mb-0">已有账号？ <a href="{% url 'login' %}" class="text-success fw-bold">立即登录</a></p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-muted small">
+                <p>注册即表示您愿意接收环保社区的最新资讯和活动通知</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
