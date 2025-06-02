@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+.top{
+    margin: 10px auto;
+    width: 1200px;
+    /*height: 300px;*/
+    background-color: pink;
+    overflow: hidden;
+}
+.left{
+    float: left;
+    width: 200px;
+    height: 300px;
+    background-color: skyblue;
+}
+.right{
+    float: right;
+    width: 950px;
+    height: 300px;
+    background-color: orange;
+}
+.bottom{
+    height: 100px;
+    background-color: brown;
+}
+/* 额外标签法.clearfix{
+    clear:both;
+}*/
+/*单伪元素法
+.clearfix::after{
+    content:"";
+    display: block;
+    clear: both;
+}*/
+/*双伪元素法
+.clearfix::before,
+.clearfix::after{
+    content:"";
+    display: table;
+}
+.clearfix::after{
+    clear:both;
+}*/
+    </style>
+</head>
+<body>
+    <div class="top clearfix">
+        <div class="left"></div>
+        <div class="right"></div>
+        <!--<div class="clearfix"></div>-->
+
+    </div>
+    <div class="bottom"></div>
+</body>
+</html>
+<!--1.额外标签法 在父级内容后面加块级元素 在css加clear both/left/right
+2.单伪元素法 
+3.双伪元素法
+4.overflow 父级css加overflow：hidden-->

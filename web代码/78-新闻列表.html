@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+li{
+    list-style: none;
+}
+a{
+    text-decoration: none;
+}
+.father{
+    margin: 100px auto;
+    width: 360px;
+    height: 200px;
+    /*background-color: darkorchid;*/
+}
+.father .son{
+    height: 34px;
+    background-color: #eee;
+    border: 1px solid #dbdee1;
+    border-left: 0;
+}
+.father .son a{
+    margin-top: -1px;
+    display: block;
+    width: 48px;
+    height: 34px;
+    line-height: 32px;
+    text-align: center;
+    background-color: #fff;
+    border-top: 3px solid #ff8400;
+    border-right: 1px solid #dbdee1;
+    font-size: 14px;
+    color: #333;
+}
+.father .son1{
+    padding: 5px;
+}
+.father .son1 li{
+    padding-left: 50px;
+    background-image: url(./10-路径/image/点.jpg);
+    background-repeat: no-repeat;
+    background-position: 0 center;
+}
+.father .son1 li a{
+    font-size: 12px;
+    color: #666;
+    line-height: 24px;
+}
+.father .son1 li a:hover{
+    color: #ff8400;
+}
+    </style>
+</head>
+<body>
+    <div class="father">
+<div class="son"><a href="#">新闻</a></div>
+<div class="son1"><ul>
+    <li><a href="#">111111111</a></li>
+    <li><a href="#">222222222</a></li>
+    <li><a href="#">333333333</a></li>
+    <li><a href="#">444444444</a></li>
+    <li><a href="#">555555555</a></li>
+    <li><a href="#">666666666</a></li>
+</ul></div>
+    </div>
+</body>
+</html>
